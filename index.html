@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stream</title>
+<style>
+  body {
+    font-family: monospace;
+    background-color: #000; /* Background color set to black */
+    color: #fff;
+    padding: 20px;
+  }
+  
+  .terminal {
+    border: 2px solid #555;
+    border-radius: 5px;
+    padding: 10px;
+    width: 80%;
+    margin: 0 auto;
+    min-height: 200px;
+    overflow-y: auto;
+    background-color: #111;
+    animation: none; /* Remove animation by default */
+  }
+  
+  input[type="text"] {
+    background-color: transparent;
+    border: none;
+    color: #fff;
+    width: calc(100% - 28px); /* Adjusted width to align with the > prompt */
+    padding: 5px;
+    font-family: monospace;
+    outline: none;
+  }
+  
+  input[type="submit"] {
+    display: none;
+  }
+  
+  .rendered-html {
+    margin-top: 10px;
+    border: 2px solid #555;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #222;
+  }
+  
+  /* CSS Animation for spinning effect */
+  @keyframes spinAnimation {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .spin {
+    animation: spinAnimation 2s linear infinite; /* Apply spinning animation */
+  }
+  
+  .web-based-caption {
+    text-align: center;
+    margin-top: 20px;
+    color: #aaa;
+  }
+</style>
+</head>
+<body>
+<div class="terminal" id="terminal">
+  <div>Welcome to Stream</div>
+  <div>Type 'help' to see available commands.</div>
+  <div id="output"></div>
+  <div style="display:flex;align-items:center;">
+    <div>&gt;</div> 
+    <input type="text" id="input" autofocus>
+  </div>
+</div>
+
+<div class="rendered-html" id="rendered-html"></div>
+
+<div class="web-based-caption">This terminal is web-based</div>
+
+<script>
+  const terminal = document.getElementById('terminal');
+  const output = document.getElementById('output');
+  const input = document.getElementById('input');
+  const renderedHtml = document.getElementById('rendered-html');
+  
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      handleCommand(input.value.trim());
+      input.value = '';
+    }
+  });
+  
+  // Ensure input field is in focus when page loads
+  window.onload = function() {
+    input.focus();
+  };
+  
+  function handleCommand(command) {
+    const args = command.split(' ');
+    const cmd = args[0];
+    const params = args.slice(1).join(' ');
+    
+    switch (cmd) {
+      case 'ipstruc':
+        fetch('https://api.ipify.org?format=json')
+          .then(response => response.json())
+          .then(data => writeToTerminal('Your IP Address: ' + data.ip))
+          .catch(error => writeToTerminal('Error fetching IP address.'));
+        break;
+      case 'httplot':
+        if (!params.startsWith('http://') && !params.startsWith('https://')) {
+          writeToTerminal('Invalid URL. Please include "http://" or "https://".');
+          return;
+        }
+        fetch(params)
+          .then(response => response.text())
+          .then(data => writeToTerminal(data))
+          .catch(error => writeToTerminal('Error fetching URL.'));
+        break;
+      case 'color':
+        terminal.style.color = params;
+        writeToTerminal('Text color changed to: ' + params);
+        break;
+      case 'echo':
+        writeToTerminal(params);
+        break;
+      case 'fortune':
+        fetch('https://api.quotable.io/random')
+          .then(response => response.json())
+          .then(data => writeToTerminal('Quote: ' + data.content))
+          .catch(error => writeToTerminal('Error fetching quote.'));
+        break;
+      case 'rick': // Easter egg command
+        writeToTerminal('Copy and paste this link into a new tab: https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+        break;
+      case 'compile':
+        renderHTML(params);
+        break;
+      case 'ls':
+        writeToTerminal('Available files:');
+        // Add your logic to list available files here
+        break;
+      case 'dir':
+        writeToTerminal('Available files:');
+        // Add your logic to list available files here
+        break;
+      case 'cd':
+        writeToTerminal('Change directory not supported in this environment.');
+        break;
+      case 'pwd':
+        writeToTerminal('Current directory: /home/user');
+        break;
+      case 'clear':
+        output.innerHTML = '';
+        break;
+      case 'cls':
+        output.innerHTML = '';
+        break;
+      case 'ruin':
+        ruinTerminal();
+        break;
+      case 'spin':
+        spinTerminal();
+        break;
+      case 'gnarp':
+        writeToTerminal('boi why u so gnarp garp');
+        break;
+      case 'help':
+        writeToTerminal('Available commands:');
+        writeToTerminal('ipstruc - shows your IP using the IPify API');
+        writeToTerminal('httplot {url} - fetches content from a website');
+        writeToTerminal('color {hex code} - changes text color');
+        writeToTerminal('echo {text} - repeat the text');
+        writeToTerminal('fortune - displays a random quote');
+        writeToTerminal('rick - Rickroll yourself!');
+        writeToTerminal('compile {html code} - render HTML code below the terminal');
+        writeToTerminal('ls - list files');
+        writeToTerminal('dir - list files');
+        writeToTerminal('cd - change directory');
+        writeToTerminal('pwd - show current directory');
+        writeToTerminal('clear - clear the terminal screen');
+        writeToTerminal('cls - clear the terminal screen');
+        writeToTerminal('ruin - completely destroy CSS styling of the terminal');
+        writeToTerminal('spin - spin the terminal content');
+        writeToTerminal('gnarp - output "boi why u so gnarp garp"');
+        writeToTerminal('help - shows this list of commands');
+        break;
+      default:
+        writeToTerminal('Unknown command. Type "help" for list of commands.');
+    }
+  }
+  
+  function writeToTerminal(message) {
+    output.innerHTML += '<div>' + message + '</div>';
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+  
+  function renderHTML(html) {
+    renderedHtml.innerHTML = html;
+  }
+  
+  function ruinTerminal() {
+    // Completely destroy CSS styling of the terminal
+    terminal.style.backgroundColor = 'red';
+    terminal.style.border = 'none';
+    terminal.style.borderRadius = '0';
+    terminal.style.padding = '0';
+    terminal.style.width = '100%';
+    terminal.style.minHeight = '100px';
+    terminal.style.overflowY = 'visible';
+    terminal.style.color = 'yellow';
+    input.style.backgroundColor = 'black';
+    input.style.color = 'red';
+    renderedHtml.style.backgroundColor = 'blue';
+    renderedHtml.style.border = 'none';
+    renderedHtml.style.borderRadius = '0';
+    renderedHtml.style.padding = '0';
+  }
+  
+  function spinTerminal() {
+    // Apply spinning animation to terminal
+    terminal.classList.add('spin');
+    setTimeout(() => {
+      terminal.classList.remove('spin');
+    }, 2000); // Stop spinning after 2 seconds
+  }
+</script>
+</body>
+</html>
